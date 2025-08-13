@@ -12,7 +12,10 @@ export default function UploadResume() {
     phone: '',
     experience: '',
     education: '',
-    skills: ''
+    skills: '',
+    linkedinUrl: '',
+    githubUrl: '',
+    websiteUrl: ''
   });
   const router = useRouter();
 
@@ -61,7 +64,10 @@ export default function UploadResume() {
         phone: '',
         experience: '',
         education: '',
-        skills: ''
+        skills: '',
+        linkedinUrl: '',
+        githubUrl: '',
+        websiteUrl: ''
       });
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -210,7 +216,7 @@ export default function UploadResume() {
               marginBottom: '15px',
               color: '#000000'
             }}>
-              Step 2: Additional Information
+              Step 2: Finish Adding Information
             </h3>
             <form onSubmit={handleFormSubmit} style={{
               display: 'flex',
@@ -310,6 +316,51 @@ export default function UploadResume() {
                   backgroundColor: '#ffffff',
                   color: '#000000',
                   resize: 'vertical'
+                }}
+              />
+              <input
+                type="url"
+                name="linkedinUrl"
+                placeholder="LinkedIn URL"
+                value={formData.linkedinUrl}
+                onChange={handleInputChange}
+                style={{
+                  padding: '12px',
+                  border: '2px solid #000000',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  backgroundColor: '#ffffff',
+                  color: '#000000'
+                }}
+              />
+              <input
+                type="url"
+                name="githubUrl"
+                placeholder="GitHub URL"
+                value={formData.githubUrl}
+                onChange={handleInputChange}
+                style={{
+                  padding: '12px',
+                  border: '2px solid #000000',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  backgroundColor: '#ffffff',
+                  color: '#000000'
+                }}
+              />
+              <input
+                type="url"
+                name="websiteUrl"
+                placeholder="Personal Website URL"
+                value={formData.websiteUrl}
+                onChange={handleInputChange}
+                style={{
+                  padding: '12px',
+                  border: '2px solid #000000',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  backgroundColor: '#ffffff',
+                  color: '#000000'
                 }}
               />
               <button 
