@@ -1,11 +1,17 @@
 "use client";
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import { useUser as useResuMaxUser } from '../../hooks/useUser';
+import { apiService } from '../../services/api';
 
 export default function UploadResume() {
+  const { user: clerkUser } = useUser();
+  const { user: resuMaxUser, updateUser } = useResuMaxUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [parsedData, setParsedData] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,8 +25,8 @@ export default function UploadResume() {
   });
   const router = useRouter();
 
-  const handleFileUpload = async () => {
-    const file = fileInputRef.current?.files?.[0];
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) {
       setMessage('Please select a PDF file to upload.');
       return;
@@ -30,14 +36,41 @@ export default function UploadResume() {
       return;
     }
     
+    if (!clerkUser) {
+      setMessage('Please sign in to upload a resume.');
+      return;
+    }
+    
     setUploading(true);
     setMessage(null);
     
-    // Simulate file processing
-    setTimeout(() => {
+    try {
+      console.log('📄 Uploading resume for user:', clerkUser.id);
+      
+      const result = await apiService.uploadResume(clerkUser.id, file);
+      
+      console.log('✅ Resume uploaded and parsed:', result);
+      
+      setParsedData(result.extractedData);
+      setMessage('Resume uploaded and parsed successfully! Extracted data shown below.');
+      
+      // Pre-fill form with extracted data if available
+      if (result.extractedData) {
+        const extracted = result.extractedData;
+        setFormData(prev => ({
+          ...prev,
+          skills: extracted.extractedSkills?.join(', ') || prev.skills,
+          education: extracted.extractedEducation?.join('\n') || prev.education,
+          experience: extracted.extractedExperience?.join('\n') || prev.experience
+        }));
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error uploading resume:', error);
+      setMessage('Error uploading resume: ' + error.message);
+    } finally {
       setUploading(false);
-      setMessage('File uploaded successfully! You can now fill out the form below.');
-    }, 2000);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -50,13 +83,31 @@ export default function UploadResume() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!clerkUser) {
+      setMessage('Please sign in to save resume information.');
+      return;
+    }
+    
     setUploading(true);
     setMessage(null);
     
-    // Simulate form submission
-    setTimeout(() => {
-      setUploading(false);
-      setMessage('Resume information saved successfully!');
+    try {
+      console.log('💾 Saving resume information for user:', clerkUser.id);
+      
+      await updateUser({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        university: formData.education,
+        major: formData.education,
+        linkedinUrl: formData.linkedinUrl,
+        githubUrl: formData.githubUrl,
+        websiteUrl: formData.websiteUrl
+      });
+      
+      setMessage('Resume information saved to your profile successfully!');
+      
       // Reset form
       setFormData({
         name: '',
@@ -72,7 +123,14 @@ export default function UploadResume() {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    }, 1500);
+      setParsedData(null);
+      
+    } catch (error: any) {
+      console.error('❌ Error saving resume information:', error);
+      setMessage('Error saving resume information: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleBack = () => {
@@ -163,45 +221,53 @@ export default function UploadResume() {
               accept="application/pdf" 
               disabled={uploading}
               style={{
-                padding: '12px',
-                border: '2px solid #000000',
-                borderRadius: '8px',
-                fontSize: '1rem',
-                backgroundColor: '#ffffff',
-                color: '#000000',
-                width: '100%',
-                marginBottom: '15px'
+                display: 'none'
               }}
+              onChange={handleFileUpload}
             />
-            <button 
-              onClick={handleFileUpload} 
-              disabled={uploading} 
-              style={{
-                padding: '12px 24px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                backgroundColor: uploading ? '#cccccc' : '#000000',
-                color: uploading ? '#666666' : '#ffffff',
-                border: '2px solid #000000',
-                borderRadius: '8px',
-                cursor: uploading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                if (!uploading) {
-                  e.currentTarget.style.backgroundColor = '#ffffff';
-                  e.currentTarget.style.color = '#000000';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!uploading) {
-                  e.currentTarget.style.backgroundColor = '#000000';
-                  e.currentTarget.style.color = '#ffffff';
-                }
-              }}
-            >
-              {uploading ? 'Uploading...' : 'Upload PDF'}
-            </button>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              marginBottom: '15px'
+            }}>
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={uploading} 
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  backgroundColor: uploading ? '#cccccc' : '#ffffff',
+                  color: uploading ? '#666666' : '#000000',
+                  border: '2px solid #000000',
+                  borderRadius: '8px',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => {
+                  if (!uploading) {
+                    e.currentTarget.style.backgroundColor = '#000000';
+                    e.currentTarget.style.color = '#ffffff';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!uploading) {
+                    e.currentTarget.style.backgroundColor = '#ffffff';
+                    e.currentTarget.style.color = '#000000';
+                  }
+                }}
+              >
+                {uploading ? 'Uploading...' : 'Choose PDF File'}
+              </button>
+              <span style={{
+                fontSize: '0.9rem',
+                color: '#666666',
+                alignSelf: 'center'
+              }}>
+                {fileInputRef.current?.files?.[0]?.name || 'No file selected'}
+              </span>
+            </div>
           </div>
 
           {/* Form Section */}
@@ -407,6 +473,55 @@ export default function UploadResume() {
             }}>
               {message}
             </p>
+          )}
+
+          {/* Parsed Data Display */}
+          {parsedData && (
+            <div style={{
+              border: '2px solid #000000',
+              borderRadius: '12px',
+              padding: '20px',
+              marginTop: '20px',
+              backgroundColor: '#f9f9f9'
+            }}>
+              <h3 style={{
+                fontSize: '1.2rem',
+                fontWeight: '600',
+                marginBottom: '15px',
+                color: '#000000'
+              }}>
+                📄 Extracted from PDF
+              </h3>
+              
+              {parsedData.extractedSkills && parsedData.extractedSkills.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Skills Found:</h4>
+                  <p style={{ fontSize: '0.9rem' }}>{parsedData.extractedSkills.join(', ')}</p>
+                </div>
+              )}
+              
+              {parsedData.extractedEducation && parsedData.extractedEducation.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Education Found:</h4>
+                  <ul style={{ fontSize: '0.9rem', margin: 0, paddingLeft: '20px' }}>
+                    {parsedData.extractedEducation.map((item: string, index: number) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {parsedData.extractedExperience && parsedData.extractedExperience.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Experience Found:</h4>
+                  <ul style={{ fontSize: '0.9rem', margin: 0, paddingLeft: '20px' }}>
+                    {parsedData.extractedExperience.map((item: string, index: number) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

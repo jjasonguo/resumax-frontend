@@ -8,6 +8,21 @@ export interface User {
   university?: string;
   major?: string;
   gpa?: number;
+  phone?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  websiteUrl?: string;
+  resumePdf?: {
+    filename: string;
+    originalName: string;
+    uploadDate: string;
+  };
+  parsedResumeData?: {
+    rawText: string;
+    extractedSkills: string[];
+    extractedEducation: string[];
+    extractedExperience: string[];
+  };
   projects?: Project[];
   workExperiences?: WorkExperience[];
   createdAt?: string;
@@ -133,6 +148,29 @@ class ApiService {
 
   async getUsersByCompany(company: string): Promise<User[]> {
     return this.request<User[]>(`/users/company/${encodeURIComponent(company)}`);
+  }
+
+  // Resume operations
+  async uploadResume(clerkUserId: string, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('resume', file);
+    formData.append('clerkUserId', clerkUserId);
+
+    const response = await fetch(`${API_BASE_URL}/resume/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async getResumeData(clerkUserId: string): Promise<any> {
+    return this.request(`/resume/${clerkUserId}`);
   }
 }
 
