@@ -16,8 +16,10 @@ export default function UploadResume() {
     name: '',
     email: '',
     phone: '',
+    university: '',
+    major: '',
     experience: '',
-    education: '',
+    projects: '',
     skills: '',
     linkedinUrl: '',
     githubUrl: '',
@@ -57,11 +59,28 @@ export default function UploadResume() {
       // Pre-fill form with extracted data if available
       if (result.extractedData) {
         const extracted = result.extractedData;
+        
+        // Format work experience for the form
+        const workExpText = extracted.extractedWorkExperience?.map((exp: any) => 
+          `${exp.title}\n${exp.bullets?.join('\n') || ''}`
+        ).join('\n\n') || '';
+        
+        // Format projects for the form
+        const projectsText = extracted.extractedProjects?.map((proj: any) => 
+          `${proj.title}\n${proj.bullets?.join('\n') || ''}`
+        ).join('\n\n') || '';
+        
         setFormData(prev => ({
           ...prev,
+          name: extracted.name || prev.name,
+          email: extracted.email || prev.email,
+          phone: extracted.phone || prev.phone,
+          university: extracted.university || prev.university,
+          major: extracted.major || prev.major,
+          linkedinUrl: extracted.linkedinUrl || prev.linkedinUrl,
           skills: extracted.extractedSkills?.join(', ') || prev.skills,
-          education: extracted.extractedEducation?.join('\n') || prev.education,
-          experience: extracted.extractedExperience?.join('\n') || prev.experience
+          experience: workExpText || prev.experience,
+          projects: projectsText || prev.projects
         }));
       }
       
@@ -99,8 +118,8 @@ export default function UploadResume() {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        university: formData.education,
-        major: formData.education,
+        university: formData.university,
+        major: formData.major,
         linkedinUrl: formData.linkedinUrl,
         githubUrl: formData.githubUrl,
         websiteUrl: formData.websiteUrl
@@ -113,8 +132,10 @@ export default function UploadResume() {
         name: '',
         email: '',
         phone: '',
+        university: '',
+        major: '',
         experience: '',
-        education: '',
+        projects: '',
         skills: '',
         linkedinUrl: '',
         githubUrl: '',
@@ -336,6 +357,36 @@ export default function UploadResume() {
                   color: '#000000'
                 }}
               />
+              <input
+                type="text"
+                name="university"
+                placeholder="University/College"
+                value={formData.university}
+                onChange={handleInputChange}
+                style={{
+                  padding: '12px',
+                  border: '2px solid #000000',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  backgroundColor: '#ffffff',
+                  color: '#000000'
+                }}
+              />
+              <input
+                type="text"
+                name="major"
+                placeholder="Major/Degree"
+                value={formData.major}
+                onChange={handleInputChange}
+                style={{
+                  padding: '12px',
+                  border: '2px solid #000000',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  backgroundColor: '#ffffff',
+                  color: '#000000'
+                }}
+              />
               <textarea
                 name="experience"
                 placeholder="Work Experience (years, roles, companies)"
@@ -353,9 +404,9 @@ export default function UploadResume() {
                 }}
               />
               <textarea
-                name="education"
-                placeholder="Education (degrees, institutions, years)"
-                value={formData.education}
+                name="projects"
+                placeholder="Projects (titles, descriptions, technologies used)"
+                value={formData.projects}
                 onChange={handleInputChange}
                 rows={3}
                 style={{
@@ -500,20 +551,70 @@ export default function UploadResume() {
                 </div>
               )}
               
-              {parsedData.extractedEducation && parsedData.extractedEducation.length > 0 && (
+              {parsedData.name && (
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Personal Info:</h4>
+                  <div style={{ fontSize: '0.9rem' }}>
+                    <p><strong>Name:</strong> {parsedData.name}</p>
+                    {parsedData.email && <p><strong>Email:</strong> {parsedData.email}</p>}
+                    {parsedData.phone && <p><strong>Phone:</strong> {parsedData.phone}</p>}
+                    {parsedData.linkedinUrl && <p><strong>LinkedIn:</strong> {parsedData.linkedinUrl}</p>}
+                  </div>
+                </div>
+              )}
+
+              {parsedData.university && (
                 <div style={{ marginBottom: '15px' }}>
                   <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Education Found:</h4>
-                  <ul style={{ fontSize: '0.9rem', margin: 0, paddingLeft: '20px' }}>
-                    {parsedData.extractedEducation.map((item: string, index: number) => (
-                      <li key={index}>{item}</li>
-                    ))}
-                  </ul>
+                  <div style={{ fontSize: '0.9rem' }}>
+                    <p><strong>University:</strong> {parsedData.university}</p>
+                    {parsedData.gpa && <p><strong>GPA:</strong> {parsedData.gpa}</p>}
+                    {parsedData.major && <p><strong>Major:</strong> {parsedData.major}</p>}
+                  </div>
                 </div>
               )}
               
+              {parsedData.extractedWorkExperience && parsedData.extractedWorkExperience.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Work Experience Found:</h4>
+                  {parsedData.extractedWorkExperience.map((experience: any, index: number) => (
+                    <div key={index} style={{ marginBottom: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                      <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{experience.title}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '5px' }}>{experience.dates}</div>
+                      {experience.bullets && experience.bullets.length > 0 && (
+                        <ul style={{ fontSize: '0.8rem', margin: '5px 0 0 0', paddingLeft: '15px' }}>
+                          {experience.bullets.map((bullet: string, bulletIndex: number) => (
+                            <li key={bulletIndex}>{bullet}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {parsedData.extractedProjects && parsedData.extractedProjects.length > 0 && (
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Projects Found:</h4>
+                  {parsedData.extractedProjects.map((project: any, index: number) => (
+                    <div key={index} style={{ marginBottom: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
+                      <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{project.title}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '5px' }}>{project.dates}</div>
+                      {project.bullets && project.bullets.length > 0 && (
+                        <ul style={{ fontSize: '0.8rem', margin: '5px 0 0 0', paddingLeft: '15px' }}>
+                          {project.bullets.map((bullet: string, bulletIndex: number) => (
+                            <li key={bulletIndex}>{bullet}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {parsedData.extractedExperience && parsedData.extractedExperience.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Experience Found:</h4>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Other Experience Found:</h4>
                   <ul style={{ fontSize: '0.9rem', margin: 0, paddingLeft: '20px' }}>
                     {parsedData.extractedExperience.map((item: string, index: number) => (
                       <li key={index}>{item}</li>
