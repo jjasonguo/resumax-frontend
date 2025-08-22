@@ -172,6 +172,18 @@ class ApiService {
   async getResumeData(clerkUserId: string): Promise<any> {
     return this.request(`/resume/${clerkUserId}`);
   }
+
+  // Application automation
+  async automateApplication(clerkUserId: string, jobUrl: string): Promise<any> {
+    return this.request('/application/automate', {
+      method: 'POST',
+      body: JSON.stringify({ clerkUserId, jobUrl }),
+    });
+  }
+
+  async getApplicationStatus(applicationId: string): Promise<any> {
+    return this.request(`/application/status/${applicationId}`);
+  }
 }
 
 export const apiService = new ApiService(); 

@@ -553,8 +553,8 @@ export default function UploadResume() {
               
               {parsedData.name && (
                 <div style={{ marginBottom: '15px' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Personal Info:</h4>
-                  <div style={{ fontSize: '0.9rem' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px', color: '#000000' }}>Personal Info:</h4>
+                  <div style={{ fontSize: '0.9rem', color: '#000000' }}>
                     <p><strong>Name:</strong> {parsedData.name}</p>
                     {parsedData.email && <p><strong>Email:</strong> {parsedData.email}</p>}
                     {parsedData.phone && <p><strong>Phone:</strong> {parsedData.phone}</p>}
@@ -565,8 +565,8 @@ export default function UploadResume() {
 
               {parsedData.university && (
                 <div style={{ marginBottom: '15px' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Education Found:</h4>
-                  <div style={{ fontSize: '0.9rem' }}>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px', color: '#000000' }}>Education Found:</h4>
+                  <div style={{ fontSize: '0.9rem', color: '#000000' }}>
                     <p><strong>University:</strong> {parsedData.university}</p>
                     {parsedData.gpa && <p><strong>GPA:</strong> {parsedData.gpa}</p>}
                     {parsedData.major && <p><strong>Major:</strong> {parsedData.major}</p>}
@@ -576,13 +576,12 @@ export default function UploadResume() {
               
               {parsedData.extractedWorkExperience && parsedData.extractedWorkExperience.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Work Experience Found:</h4>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px', color: '#000000' }}>Work Experience Found:</h4>
                   {parsedData.extractedWorkExperience.map((experience: any, index: number) => (
                     <div key={index} style={{ marginBottom: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
-                      <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{experience.title}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '5px' }}>{experience.dates}</div>
+                      <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#000000' }}>{experience.title}</div>
                       {experience.bullets && experience.bullets.length > 0 && (
-                        <ul style={{ fontSize: '0.8rem', margin: '5px 0 0 0', paddingLeft: '15px' }}>
+                        <ul style={{ fontSize: '0.8rem', margin: '5px 0 0 0', paddingLeft: '15px', color: '#000000' }}>
                           {experience.bullets.map((bullet: string, bulletIndex: number) => (
                             <li key={bulletIndex}>{bullet}</li>
                           ))}
@@ -595,13 +594,12 @@ export default function UploadResume() {
 
               {parsedData.extractedProjects && parsedData.extractedProjects.length > 0 && (
                 <div style={{ marginBottom: '15px' }}>
-                  <h4 style={{ fontWeight: '600', marginBottom: '5px' }}>Projects Found:</h4>
+                  <h4 style={{ fontWeight: '600', marginBottom: '5px', color: '#000000' }}>Projects Found:</h4>
                   {parsedData.extractedProjects.map((project: any, index: number) => (
                     <div key={index} style={{ marginBottom: '10px', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}>
-                      <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{project.title}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '5px' }}>{project.dates}</div>
+                      <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#000000' }}>{project.title}</div>
                       {project.bullets && project.bullets.length > 0 && (
-                        <ul style={{ fontSize: '0.8rem', margin: '5px 0 0 0', paddingLeft: '15px' }}>
+                        <ul style={{ fontSize: '0.8rem', margin: '5px 0 0 0', paddingLeft: '15px', color: '#000000' }}>
                           {project.bullets.map((bullet: string, bulletIndex: number) => (
                             <li key={bulletIndex}>{bullet}</li>
                           ))}
