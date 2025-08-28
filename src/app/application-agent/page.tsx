@@ -34,7 +34,7 @@ export default function ApplicationAgent() {
 
     try {
       console.log('🤖 Starting application automation for:', jobUrl);
-      
+      // test if personal github still works.
       const response = await apiService.automateApplication(clerkUser.id, jobUrl);
       
       console.log('✅ Application automation result:', response);
