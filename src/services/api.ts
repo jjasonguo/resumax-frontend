@@ -173,16 +173,19 @@ class ApiService {
     return this.request(`/resume/${clerkUserId}`);
   }
 
-  // Application automation
-  async automateApplication(clerkUserId: string, jobUrl: string): Promise<any> {
-    return this.request('/application/automate', {
+  // Page utilities
+  async getPageTitle(url: string): Promise<{ title: string }> {
+    return this.request<{ title: string }>(`/page/title`, {
       method: 'POST',
-      body: JSON.stringify({ clerkUserId, jobUrl }),
+      body: JSON.stringify({ url }),
     });
   }
 
-  async getApplicationStatus(applicationId: string): Promise<any> {
-    return this.request(`/application/status/${applicationId}`);
+  async inspectFirstTextbox(url: string): Promise<{ url: string; pageTitle: string; textbox: any }>{
+    return this.request(`/automation/inspect`, {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    });
   }
 }
 

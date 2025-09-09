@@ -9,42 +9,41 @@ export default function ApplicationAgent() {
   const router = useRouter();
   const { user: clerkUser } = useUser();
   const [jobUrl, setJobUrl] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [pageTitle, setPageTitle] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [textboxInfo, setTextboxInfo] = useState<any | null>(null);
 
   const handleBack = () => {
     router.push('/');
   };
 
-  const handleAutomateApplication = async () => {
-    if (!jobUrl.trim()) {
-      setError('Please enter a job application URL');
-      return;
-    }
+  const handleOpenUrl = async () => {
+    setError(null);
+    setPageTitle(null);
+    const trimmed = jobUrl.trim();
+    if (!trimmed) return;
 
     if (!clerkUser) {
       setError('Please sign in to use the application agent');
       return;
     }
 
-    setIsProcessing(true);
-    setError(null);
-    setResult(null);
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    window.open(normalized, '_blank', 'noopener,noreferrer');
 
     try {
-      console.log('🤖 Starting application automation for:', jobUrl);
-      // test if personal github still works.
-      const response = await apiService.automateApplication(clerkUser.id, jobUrl);
-      
-      console.log('✅ Application automation result:', response);
-      setResult(response);
-      
-    } catch (err: any) {
-      console.error('❌ Application automation error:', err);
-      setError(err.message || 'Failed to automate application');
+      setIsLoading(true);
+      const [{ title }, inspect] = await Promise.all([
+        apiService.getPageTitle(normalized),
+        apiService.inspectFirstTextbox(normalized)
+      ]);
+      setPageTitle(title || '');
+      setTextboxInfo(inspect?.textbox || null);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to fetch page title');
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
     }
   };
 
@@ -138,41 +137,39 @@ export default function ApplicationAgent() {
                 backgroundColor: '#ffffff',
                 color: '#000000'
               }}
-              disabled={isProcessing}
             />
           </div>
 
           <button
-            onClick={handleAutomateApplication}
-            disabled={isProcessing || !jobUrl.trim()}
+            onClick={handleOpenUrl}
+            disabled={!jobUrl.trim()}
             style={{
               width: '100%',
               padding: '12px',
               fontSize: '1rem',
               fontWeight: 'bold',
-              backgroundColor: isProcessing || !jobUrl.trim() ? '#cccccc' : '#000000',
+              backgroundColor: !jobUrl.trim() ? '#cccccc' : '#000000',
               color: '#ffffff',
               border: '2px solid #000000',
               borderRadius: '8px',
-              cursor: isProcessing || !jobUrl.trim() ? 'not-allowed' : 'pointer',
+              cursor: !jobUrl.trim() ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease'
             }}
             onMouseOver={(e) => {
-              if (!isProcessing && jobUrl.trim()) {
+              if (jobUrl.trim()) {
                 e.currentTarget.style.backgroundColor = '#ffffff';
                 e.currentTarget.style.color = '#000000';
               }
             }}
             onMouseOut={(e) => {
-              if (!isProcessing && jobUrl.trim()) {
+              if (jobUrl.trim()) {
                 e.currentTarget.style.backgroundColor = '#000000';
                 e.currentTarget.style.color = '#ffffff';
               }
             }}
           >
-            {isProcessing ? '🤖 Automating Application...' : '🚀 Start Application Automation'}
+            {isLoading ? 'Fetching title…' : '🔗 Open URL & Fetch Title'}
           </button>
-
           {error && (
             <div style={{
               padding: '16px',
@@ -180,135 +177,47 @@ export default function ApplicationAgent() {
               border: '2px solid #f00',
               color: '#c00',
               borderRadius: '8px',
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
+              marginTop: '12px'
             }}>
               <strong>Error:</strong> {error}
             </div>
           )}
-
-          {result && (
+          {pageTitle !== null && (
             <div style={{
-              marginTop: '24px'
+              padding: '16px',
+              backgroundColor: '#f5f5f5',
+              border: '2px solid #000000',
+              borderRadius: '8px',
+              fontSize: '0.95rem',
+              marginTop: '12px',
+              color: '#000000'
             }}>
-              <h3 style={{
-                fontSize: '1.2rem',
-                fontWeight: 'bold',
-                marginBottom: '16px',
-                color: '#000000'
-              }}>
-                ✅ Automation Results
-              </h3>
-              
-              <div style={{
-                backgroundColor: '#f5f5f5',
-                padding: '16px',
-                borderRadius: '8px',
-                marginBottom: '16px'
-              }}>
-                <h4 style={{
-                  fontWeight: 'bold',
-                  marginBottom: '8px',
-                  color: '#000000'
-                }}>
-                  Filled Fields:
-                </h4>
-                {result.result?.filledFields?.length > 0 ? (
-                  <ul style={{
-                    listStyle: 'none',
-                    padding: 0,
-                    margin: 0
-                  }}>
-                    {result.result.filledFields.map((field: any, index: number) => (
-                      <li key={index} style={{
-                        fontSize: '0.9rem',
-                        marginBottom: '4px',
-                        color: '#000000'
-                      }}>
-                        <strong>{field.field}:</strong> {field.value || field.note}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={{
-                    color: '#666',
-                    fontSize: '0.9rem'
-                  }}>
-                    No fields were automatically filled
-                  </p>
-                )}
-              </div>
-
-              {result.result?.errors?.length > 0 && (
-                <div style={{
-                  backgroundColor: '#fff3cd',
-                  padding: '16px',
-                  borderRadius: '8px',
-                  marginBottom: '16px'
-                }}>
-                  <h4 style={{
-                    fontWeight: 'bold',
-                    marginBottom: '8px',
-                    color: '#856404'
-                  }}>
-                    ⚠️ Issues Found:
-                  </h4>
-                  <ul style={{
-                    listStyle: 'none',
-                    padding: 0,
-                    margin: 0
-                  }}>
-                    {result.result.errors.map((error: string, index: number) => (
-                      <li key={index} style={{
-                        fontSize: '0.9rem',
-                        color: '#856404',
-                        marginBottom: '4px'
-                      }}>
-                        {error}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <div style={{
-                fontSize: '0.9rem',
-                color: '#666',
-                lineHeight: '1.5'
-              }}>
-                <p><strong>Status:</strong> {result.result?.status}</p>
-                <p><strong>Note:</strong> The browser window will open to show the automation in action. 
-                You may need to manually complete any remaining fields or submit the application.</p>
-              </div>
+              <strong>Page Title:</strong> {pageTitle || '(empty)'}
             </div>
           )}
 
-          <div style={{
-            padding: '16px',
-            backgroundColor: '#e3f2fd',
-            borderRadius: '8px',
-            marginTop: '24px'
-          }}>
-            <h4 style={{
-              fontWeight: 'bold',
-              marginBottom: '8px',
-              color: '#1565c0'
+          {textboxInfo && (
+            <div style={{
+              padding: '16px',
+              backgroundColor: '#eef7ff',
+              border: '2px solid #90caf9',
+              borderRadius: '8px',
+              fontSize: '0.95rem',
+              marginTop: '12px',
+              color: '#000000'
             }}>
-              ℹ️ How it works:
-            </h4>
-            <ul style={{
-              fontSize: '0.9rem',
-              color: '#1565c0',
-              lineHeight: '1.5',
-              paddingLeft: '20px',
-              margin: 0
-            }}>
-              <li>AI analyzes the job application form</li>
-              <li>Maps your resume data to form fields</li>
-              <li>Automatically fills in basic information</li>
-              <li>Opens browser to show the process</li>
-              <li>You can review and complete manually</li>
-            </ul>
-          </div>
+              <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>First Textbox Info</div>
+              <div><strong>Selector:</strong> {textboxInfo.selector}</div>
+              <div><strong>Label:</strong> {textboxInfo.labelText || '(none)'}</div>
+              <div><strong>Type:</strong> {textboxInfo.type}</div>
+              <div><strong>Name:</strong> {textboxInfo.name || '(none)'}</div>
+              <div><strong>Placeholder:</strong> {textboxInfo.placeholder || '(none)'}</div>
+              <div><strong>Aria Label:</strong> {textboxInfo.ariaLabel || '(none)'}</div>
+              <div><strong>Current Value:</strong> {textboxInfo.value || '(empty)'}</div>
+            </div>
+          )}
+          
         </div>
       </div>
     </main>
